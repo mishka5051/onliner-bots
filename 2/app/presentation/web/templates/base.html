@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Поиск мероприятий{% endblock %} — Onlíner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/onliner.css">
+</head>
+<body>
+    <header class="onl-topbar">
+        <div class="onl-topbar__inner">
+            <a href="/" class="onl-logo">
+                <span class="onl-logo__brand">Onl<span class="onl-logo__brand-accent">í</span>ner</span>
+                <span class="onl-logo__service">Поиск мероприятий</span>
+            </a>
+            <span class="onl-topbar__meta">Инфопартнёрства</span>
+        </div>
+    </header>
+
+    <nav class="onl-nav">
+        <div class="onl-nav__inner">
+            <a href="/events/shortlist"
+               class="onl-nav__link{% if active_nav == 'shortlist' %} onl-nav__link--active{% endif %}">
+                Shortlist
+            </a>
+            <a href="/events"
+               class="onl-nav__link{% if active_nav == 'events' %} onl-nav__link--active{% endif %}">
+                Мероприятия
+            </a>
+            <a href="/search-queries"
+               class="onl-nav__link{% if active_nav == 'queries' %} onl-nav__link--active{% endif %}">
+                Запросы
+            </a>
+            <a href="/search-runs"
+               class="onl-nav__link{% if active_nav == 'runs' %} onl-nav__link--active{% endif %}">
+                Запуски
+            </a>
+            <span class="onl-nav__spacer"></span>
+            <a href="/docs" class="onl-nav__link onl-nav__link--muted">API</a>
+        </div>
+    </nav>
+
+    <main class="onl-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="onl-footer">
+        Onlíner · Event Search Service · {% block footer_extra %}{% endblock %}
+    </footer>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

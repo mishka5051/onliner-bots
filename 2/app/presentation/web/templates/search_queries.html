@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Поисковые запросы{% endblock %}
+
+{% block content %}
+<section class="onl-card">
+    <div class="onl-card__header">
+        <h1 class="onl-card__title">Поисковые запросы</h1>
+        <div class="onl-card__actions">
+            <a href="/search-queries/new" class="onl-btn onl-btn--primary">Добавить запрос</a>
+            <form method="post" action="/search-queries/run-all" style="display:inline;">
+                <button type="submit" class="onl-btn onl-btn--success">Запустить все активные</button>
+            </form>
+            {% if pending_count > 0 %}
+            <form method="post" action="/search-queries/enrich-pending" style="display:inline;">
+                <button type="submit" class="onl-btn onl-btn--secondary">
+                    Обогатить ожидающие ({{ pending_count }})
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if queries %}
+    <table class="onl-table">
+        <thead>
+            <tr>
+                <th>Запрос</th>
+                <th>Категория</th>
+                <th>Активен</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for q in queries %}
+            <tr>
+                <td>{{ q.query_text }}</td>
+                <td>{{ q.category or '—' }}</td>
+                <td>{{ 'Да' if q.is_active else 'Нет' }}</td>
+                <td class="onl-table__actions">
+                    <form method="post" action="/search-queries/{{ q.id }}/run" style="display:inline;">
+                        <button type="submit" class="onl-btn onl-btn--small" {% if not q.is_active %}disabled{% endif %}>Запустить</button>
+                    </form>
+                    <form method="post" action="/search-queries/{{ q.id }}/toggle" style="display:inline;">
+                        <button type="submit" class="onl-btn onl-btn--small onl-btn--secondary">
+                            {% if q.is_active %}Отключить{% else %}Включить{% endif %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="onl-empty">Запросы не настроены.</p>
+    {% endif %}
+</section>
+{% endblock %}

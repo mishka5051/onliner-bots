@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Shortlist{% endblock %}
+
+{% block content %}
+<section class="onl-card">
+    <div class="onl-card__header">
+        <div>
+            <h1 class="onl-card__title">Shortlist для инфопартнёрств</h1>
+            <p class="onl-card__subtitle">
+                Мероприятия с оценкой от {{ min_score }}, до даты которых Onliner успеет подготовить инфопартнёрство
+                (минимум {{ min_lead_time_weeks }} нед.). Список пересчитывается при каждом открытии.
+            </p>
+        </div>
+    </div>
+
+    {% if enriching and pending_count > 0 %}
+    <div class="onl-alert onl-alert--info">
+        <p>Обогащение запущено в фоне. Осталось {{ pending_count }} — страница обновится через 15 секунд.</p>
+    </div>
+    {% elif pending_count > 0 %}
+    <div class="onl-alert onl-alert--info">
+        <p>Ещё {{ pending_count }} мероприятий ожидают обогащения и оценки.</p>
+        <form method="post" action="/search-queries/enrich-pending" style="margin-top: 0.75rem;">
+            <button type="submit" class="onl-btn onl-btn--small onl-btn--primary">Обогатить ожидающие</button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if events %}
+    <table class="onl-table">
+        <thead>
+            <tr>
+                <th>Score</th>
+                <th>Название</th>
+                <th>Город</th>
+                <th>Тип</th>
+                <th>Бесплатно</th>
+                <th>Дата</th>
+                <th>До события</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td><strong>{{ event.relevance_score or '—' }}</strong></td>
+                <td><a href="/events/{{ event.id }}">{{ event.title }}</a></td>
+                <td>{% if event.is_minsk %}Минск{% else %}{{ event.city or '—' }}{% endif %}</td>
+                <td>{{ event.event_type or '—' }}</td>
+                <td>{% if event.is_free %}да{% elif event.is_free is sameas false %}нет{% else %}—{% endif %}</td>
+                <td>{{ event.event_date.strftime('%d.%m.%Y') if event.event_date else '—' }}</td>
+                <td>{% if event.lead_time_days is not none %}{{ event.lead_time_days }} дн.{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="onl-empty">
+        {% if pending_count > 0 %}
+        Подходящих мероприятий пока нет — дождитесь завершения обогащения или нажмите кнопку выше.
+        {% else %}
+        Подходящих мероприятий пока нет. Запустите поиск на странице «Запросы».
+        {% endif %}
+    </p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if enriching or pending_count > 0 %}
+<script>
+  setTimeout(function () { window.location.reload(); }, 15000);
+</script>
+{% endif %}
+{% endblock %}

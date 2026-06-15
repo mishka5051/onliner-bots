@@ -1,0 +1,56 @@
+lead_time:
+  min_weeks: 4
+  ideal_weeks: 8
+
+weights:
+  minsk: 30
+  large_event_3000_plus: 25
+  large_event_1000_plus: 15
+  recurring: 15
+  free_entry: 10
+  onliner_theme: 20
+  partner_slot: 15
+  enough_lead_time: 10
+  trend_bonus: 10
+
+thresholds:
+  shortlist_min_score: 50
+  shortlist_max_age_days: 30
+  auto_reject_below: 20
+
+onliner_themes:
+  keywords:
+    e-commerce: ["e-commerce", "ecommerce", "маркетплейс", "онлайн-торговля", "ритейл"]
+    technology: ["it", "tech", "digital", "цифров", "разработк", "devops", "ai", "ии"]
+    lifestyle: ["lifestyle", "образ жизни", "потребител", "b2c"]
+    auto: ["авто", "automotive", "car"]
+    finance: ["финанс", "finance", "банк", "fintech"]
+    consumer: ["покупател", "consumer", "шопинг", "shopping"]
+
+event_types:
+  conference: ["конференц", "conference", "summit", "саммит", "форум"]
+  festival: ["фестивал", "festival"]
+  exhibition: ["выставк", "exhibition", "expo"]
+  meetup: ["митап", "meetup", "нетворкинг"]
+  concert: ["концерт", "concert", "музык"]
+  urban: ["urban", "городск", "city"]
+
+minsk_keywords: ["минск", "minsk"]
+
+free_keywords: ["бесплатн", "free entry", "free admission", "вход свободный", "вход бесплатный"]
+
+paid_keywords: ["билет", "ticket", "руб", "byn", "цена", "стоимость", "платн"]
+
+attendance_patterns:
+  - '(?:более|свыше|около|до)?\s*(\d[\d\s]{2,6})\s*(?:посетител|участник|гост|человек|visitor|attendee)'
+  - '(\d[\d\s]{2,6})\s*\+\s*(?:посетител|участник)'
+
+partner_keywords:
+  - "партнёр"
+  - "партнер"
+  - "спонсор"
+  - "sponsor"
+  - "инфопартнёр"
+  - "медиапартнёр"
+  - "стенд"
+  - "exhibitor"

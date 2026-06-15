@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Новый запрос{% endblock %}
+
+{% block content %}
+<section class="onl-card">
+    <div class="onl-card__header">
+        <h1 class="onl-card__title">Добавить поисковый запрос</h1>
+    </div>
+
+    <form method="post" action="/search-queries/new" class="onl-form">
+        <div class="onl-form__row">
+            <label class="onl-label" for="query_text">Текст запроса</label>
+            <input type="text" id="query_text" name="query_text" class="onl-input" required maxlength="512">
+        </div>
+        <div class="onl-form__row">
+            <label class="onl-label" for="category">Категория</label>
+            <input type="text" id="category" name="category" class="onl-input" maxlength="100">
+        </div>
+        <div class="onl-form__row">
+            <label class="onl-checkbox">
+                <input type="checkbox" name="is_active" checked> Активен
+            </label>
+        </div>
+        <div class="onl-form__actions">
+            <button type="submit" class="onl-btn onl-btn--primary">Сохранить</button>
+            <a href="/search-queries" class="onl-btn onl-btn--secondary">Отмена</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
