@@ -73,6 +73,18 @@ NON_EVENT_KEYWORDS = (
     "аренда офис",
     "банкетный",
     "организация мероприятий",
+    "конференц-зал",
+    "конференц зал",
+    "конференцзал",
+    "переговорная",
+    "переговорные комнаты",
+    "аренда зала",
+    "аренда конференц",
+    "аренда площадки",
+    "снять зал",
+    "почасовая аренда",
+    "hourly rental",
+    "conference room rental",
     "alocasia",
     "plantaddicts",
     "gardenia.net",
@@ -88,6 +100,38 @@ GUIDE_PATH_MARKERS = (
     "гайд",
 )
 
+NON_EVENT_PATH_MARKERS = (
+    "/arenda",
+    "/rent",
+    "/conference-hall",
+    "/coworking",
+    "/banket",
+    "/uslugi",
+    "/services",
+)
+
+QUERY_STOPWORDS = {
+    "и",
+    "в",
+    "на",
+    "по",
+    "для",
+    "the",
+    "and",
+    "or",
+    "минск",
+    "minsk",
+    "беларусь",
+    "belarus",
+    "конференция",
+    "конференции",
+    "мероприятие",
+    "мероприятия",
+    "форум",
+}
+
+MIN_QUERY_TOKEN_LEN = 3
+
 
 def _text_blob(result: SearchResult) -> str:
     parts = [result.title, result.snippet or "", result.link, result.source_domain]
@@ -96,6 +140,24 @@ def _text_blob(result: SearchResult) -> str:
 
 def _keyword_hits(text: str, keywords: tuple[str, ...]) -> int:
     return sum(1 for keyword in keywords if keyword in text)
+
+
+def _query_tokens(query: str | None) -> list[str]:
+    if not query:
+        return []
+    tokens = re.findall(r"[a-zA-Zа-яА-ЯёЁ0-9]{3,}", query.lower())
+    return [
+        token
+        for token in tokens
+        if token not in QUERY_STOPWORDS and len(token) >= MIN_QUERY_TOKEN_LEN
+    ]
+
+
+def _query_match_hits(result: SearchResult, query_tokens: list[str]) -> int:
+    if not query_tokens:
+        return 0
+    text = _text_blob(result)
+    return sum(1 for token in query_tokens if token in text)
 
 
 def score_result(result: SearchResult) -> int:
@@ -109,6 +171,8 @@ def score_result(result: SearchResult) -> int:
     path = urlparse(result.link).path.lower()
     if any(marker in path for marker in GUIDE_PATH_MARKERS):
         score -= 15
+    if any(marker in path for marker in NON_EVENT_PATH_MARKERS):
+        score -= 45
     if any(keyword in text for keyword in NON_EVENT_KEYWORDS):
         score -= 40
     if result.source_domain in CATALOG_DOMAINS:
@@ -129,20 +193,40 @@ def is_blocked(result: SearchResult) -> bool:
     return any(domain.endswith(f".{blocked}") for blocked in BLOCKED_DOMAINS)
 
 
-def rank_results(results: list[SearchResult], *, limit: int) -> list[SearchResult]:
+def rank_results(results: list[SearchResult], *, limit: int, query: str | None = None) -> list[SearchResult]:
     filtered = [item for item in results if not is_blocked(item)]
-    ranked = sorted(
-        filtered,
-        key=lambda item: score_result(item),
-        reverse=True,
-    )
+    query_tokens = _query_tokens(query)
+    if query_tokens:
+        query_filtered: list[SearchResult] = []
+        for item in filtered:
+            hits = _query_match_hits(item, query_tokens)
+            if len(query_tokens) >= 2 and hits < 1:
+                continue
+            if len(query_tokens) >= 4 and hits < 2:
+                continue
+            query_filtered.append(item)
+        # Do not return an empty list just because query tokens were too strict.
+        if query_filtered:
+            filtered = query_filtered
+
+    scored = [(item, score_result(item)) for item in filtered]
+    # Hard-cut obvious non-event and low-relevance pages.
+    strong = [(item, score) for item, score in scored if score >= 12]
+    positive = [(item, score) for item, score in scored if score > 0]
+    # Fallback order:
+    # 1) strong event-like results
+    # 2) positive-score results
+    # 3) if everything is weak/negative, still return best-ranked items
+    #    so deep search can process something instead of zero hits.
+    pool = strong if strong else (positive if positive else scored)
+    ranked = sorted(pool, key=lambda pair: pair[1], reverse=True)
     return [
         SearchResult(
             title=item.title,
             snippet=item.snippet,
             link=item.link,
             source_domain=item.source_domain,
-            relevance_hint=score_result(item),
+            relevance_hint=score,
         )
-        for item in ranked[:limit]
+        for item, score in ranked[:limit]
     ]

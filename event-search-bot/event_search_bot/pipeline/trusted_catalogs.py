@@ -101,6 +101,25 @@ SKIP_URL_PARTS = (
     "/register",
     "/cart",
     "/search",
+    "/events/filter/",
+    "/events/calendar/",
+    "/organizatoram/",
+    "/regions/",
+)
+
+SKIP_URL_REGEX = (
+    re.compile(r"/events/[a-z0-9_]+-minsk/?$", re.IGNORECASE),
+    re.compile(r"/events/[a-z0-9_]+-belarus/?$", re.IGNORECASE),
+    re.compile(r"/events/[^/]+/conference/?$", re.IGNORECASE),
+)
+
+GENERIC_TITLE_PATTERNS = (
+    re.compile(r"^для\s+", re.IGNORECASE),
+    re.compile(r"^другое( событие)?$", re.IGNORECASE),
+    re.compile(r"^ит и интернет$", re.IGNORECASE),
+    re.compile(r"^красота и здоровье$", re.IGNORECASE),
+    re.compile(r"^сертификаты$", re.IGNORECASE),
+    re.compile(r"^бизнес$", re.IGNORECASE),
 )
 
 
@@ -115,7 +134,9 @@ def _text_blob(*parts: str | None) -> str:
 
 def is_skipped_catalog_child_url(url: str) -> bool:
     path = urlparse(url).path.lower()
-    return any(marker in path for marker in SKIP_URL_PARTS)
+    if any(marker in path for marker in SKIP_URL_PARTS):
+        return True
+    return any(pattern.search(path) for pattern in SKIP_URL_REGEX)
 
 
 def event_matches_query(
@@ -126,6 +147,9 @@ def event_matches_query(
     tier: str,
 ) -> bool:
     if is_skipped_catalog_child_url(url):
+        return False
+    normalized_title = (title or "").strip().lower()
+    if any(pattern.search(normalized_title) for pattern in GENERIC_TITLE_PATTERNS):
         return False
 
     blob = _text_blob(title, url)

@@ -143,10 +143,10 @@ class DeepSearchRunner:
                 seen_urls.add(key)
                 merged.append(item)
 
-        add_hits(rank_results(raw_hits, limit=self._results_limit))
+        add_hits(rank_results(raw_hits, limit=self._results_limit, query=built_query))
         add_hits(catalog_hits)
 
-        hits = rank_results(merged, limit=self._results_limit)
+        hits = rank_results(merged, limit=self._results_limit, query=built_query)
         progress.search_hits = len(hits)
         progress.phase = "enriching"
 

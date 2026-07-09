@@ -41,5 +41,5 @@ class EventSearchService:
                 f"({self._settings.searxng_base_url})."
             ) from exc
 
-        ranked = rank_results(raw, limit=self._settings.search_results_limit)
+        ranked = rank_results(raw, limit=self._settings.search_results_limit, query=query)
         return query, ranked

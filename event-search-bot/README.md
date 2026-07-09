@@ -25,20 +25,35 @@ SearXNG → ранжирование по ключевым словам → сп
 - Последние 10 поисков с кнопкой «Повторить»
 - Шаблоны: **IT Минск**, **E-commerce**, **Выставки 2026**
 
-Нужен только **SearXNG** (порт 8080). Сервис на 8001 не требуется.
+SearXNG теперь поднимается автоматически вместе с этим ботом (`docker compose up`).
+Сервис на 8001 не требуется.
 
 ## Быстрый старт
 
-### 1. SearXNG
+### Для другого человека (с нуля)
+
+Нужно только:
+- Docker + Docker Compose
+- токен @BotFather для каждого бота
+
+Порядок запуска:
 
 ```bash
-cd ../2
-docker compose up -d searxng
+cd partnership-bot
+cp .env.example .env
+# TELEGRAM_BOT_TOKEN=...
+docker compose up -d --build
+
+cd ../event-search-bot
+cp .env.example .env
+# TELEGRAM_BOT_TOKEN=...
+docker compose up -d --build
 ```
 
-Проверка: http://localhost:8080
+Почему такой порядок: `partnership-bot` создаёт общий Docker volume `partnership-leads-data`,
+который использует `event-search-bot`.
 
-### 2. Бот
+### 1. Бот (локально)
 
 ```bash
 cd event-search-bot
@@ -49,7 +64,7 @@ pip install -e .
 event-search-bot
 ```
 
-Docker:
+Docker (бот + встроенный SearXNG):
 
 ```bash
 cp .env.example .env
@@ -61,7 +76,7 @@ docker compose up -d --build
 | Переменная | Описание |
 |------------|----------|
 | `TELEGRAM_BOT_TOKEN` | Токен от @BotFather |
-| `SEARXNG_BASE_URL` | URL SearXNG (`http://localhost:8080`) |
+| `SEARXNG_BASE_URL` | URL SearXNG (`http://searxng:8080` в docker-compose) |
 | `SEARCH_RESULTS_LIMIT` | Результатов быстрого поиска (10) |
 | `DEEP_SEARCH_RESULTS_LIMIT` | Ссылок из SearXNG в глубоком поиске (80) |
 | `DEEP_SEARCH_PAGES_MAX` | Страниц SearXNG в глубоком поиске (4) |
