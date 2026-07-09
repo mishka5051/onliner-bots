@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "event-search-bot"
+version = "0.1.0"
+description = "Telegram bot: search events on the internet via SearXNG"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiogram>=3.15.0",
+    "beautifulsoup4>=4.12.0",
+    "httpx>=0.28.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "pyyaml>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+]
+
+[project.scripts]
+event-search-bot = "event_search_bot.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["event_search_bot*"]
+
+[tool.setuptools.package-data]
+"event_search_bot.pipeline.config" = ["scoring_rules.yaml"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

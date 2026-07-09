@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - partnership-leads-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  partnership-leads-data:
+    name: partnership-leads-data

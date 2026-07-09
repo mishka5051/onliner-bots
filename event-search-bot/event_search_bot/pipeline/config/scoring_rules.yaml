@@ -1,0 +1,301 @@
+lead_time:
+  min_weeks: 4
+  ideal_weeks: 8
+
+weights:
+  minsk: 30
+  large_event_3000_plus: 25
+  large_event_1000_plus: 15
+  recurring: 15
+  free_entry: 10
+  onliner_theme: 20
+  partner_slot: 15
+  enough_lead_time: 10
+  trend_bonus: 10
+
+thresholds:
+  shortlist_min_score: 50
+  shortlist_max_age_days: 30
+  auto_reject_below: 20
+  supplementary_borderline_min: 25
+  supplementary_borderline_max: 65
+
+# Человекочитаемые подписи для score_breakdown в UI
+score_labels:
+  minsk: "Минск / Беларусь"
+  large_event_3000_plus: "Крупное мероприятие (3000+)"
+  large_event_1000_plus: "Среднее мероприятие (1000+)"
+  recurring: "Повторяющееся событие"
+  free_entry: "Бесплатный вход"
+  onliner_theme: "Тематика Onliner"
+  partner_slot: "Возможность партнёрства"
+  enough_lead_time: "Достаточный запас по дате"
+  trend_bonus: "Упоминания в поиске"
+  paid_penalty: "Платный вход"
+  not_minsk_penalty: "Не Минск"
+  short_lead_time_penalty: "Мало времени до события"
+  uncertain_minsk_penalty: "Город не подтверждён"
+
+onliner_themes:
+  keywords:
+    e-commerce:
+      - e-commerce
+      - ecommerce
+      - e commerce
+      - маркетплейс
+      - маркетплейсы
+      - онлайн-торговля
+      - онлайн торговля
+      - интернет-магазин
+      - ритейл
+      - retail
+      - маркетплейсинг
+    technology:
+      - it
+      - tech
+      - digital
+      - цифров
+      - разработк
+      - devops
+      - ai
+      - ии
+      - искусственный интеллект
+      - machine learning
+      - data science
+      - cybersecurity
+      - кибербезопас
+      - стартап
+      - startup
+      - software
+      - программирован
+    lifestyle:
+      - lifestyle
+      - образ жизни
+      - потребител
+      - b2c
+      - шопинг
+      - shopping
+      - мода
+      - beauty
+      - косметик
+    auto:
+      - авто
+      - automotive
+      - car
+      - автомобил
+      - автопром
+      - электромобил
+    finance:
+      - финанс
+      - finance
+      - банк
+      - fintech
+      - финтех
+      - инвестиц
+      - платёж
+      - платеж
+      - кредит
+    consumer:
+      - покупател
+      - consumer
+      - b2b2c
+      - ритейл медиа
+      - потребительск
+  descriptions:
+    e-commerce: "онлайн торговля маркетплейсы интернет магазины ритейл e-commerce продажи товаров"
+    technology: "it технологии digital разработка программирование ai devops стартапы software"
+    lifestyle: "образ жизни потребители b2c шопинг мода beauty lifestyle"
+    auto: "автомобили авто automotive транспорт электромобили автопром"
+    finance: "финансы банки fintech инвестиции платежи кредиты"
+    consumer: "покупатели consumer ритейл потребительский рынок"
+
+event_types:
+  conference:
+    - конференц
+    - conference
+    - summit
+    - саммит
+    - форум
+    - forum
+    - congress
+    - конгресс
+  festival:
+    - фестивал
+    - festival
+    - fest
+  exhibition:
+    - выставк
+    - exhibition
+    - expo
+    - вэд
+  meetup:
+    - митап
+    - meetup
+    - нетворкинг
+    - networking
+    - воркшоп
+    - workshop
+  concert:
+    - концерт
+    - concert
+    - музык
+    - music
+  urban:
+    - urban
+    - городск
+    - city
+    - cityfest
+
+minsk_keywords:
+  - минск
+  - minsk
+  - беларус
+  - belarus
+  - белорус
+  - республика беларусь
+
+belarus_city_keywords:
+  - гомель
+  - могилёв
+  - могилев
+  - витебск
+  - гродно
+  - брест
+  - барановичи
+  - борисов
+  - пинск
+  - орша
+  - новополоцк
+  - лида
+  - солигорск
+  - молодечно
+  - полоцк
+
+foreign_city_keywords:
+  - москва
+  - moscow
+  - санкт-петербург
+  - spb
+  - петербург
+  - казань
+  - новосибирск
+  - екатеринбург
+  - киев
+  - kyiv
+  - варшава
+  - warsaw
+  - вильнюс
+  - vilnius
+  - феодосия
+  - feodosia
+  - крым
+  - crimea
+  - севастополь
+  - сочи
+  - краснодар
+  - ростов
+  - ростов-на-дону
+  - самара
+  - воронеж
+  - краков
+  - krakow
+  - санкт петербург
+  - нижний новгород
+  - уфа
+  - пермь
+  - волгоград
+  - тюмень
+  - ташкент
+  - алматы
+  - баку
+  - тбилиси
+  - ереван
+  - рига
+  - riga
+  - таллин
+  - tallinn
+  - helsinki
+  - хельсинки
+
+free_keywords:
+  - бесплатн
+  - free entry
+  - free admission
+  - вход свободный
+  - вход бесплатный
+  - free of charge
+  - без регистрационного взноса
+  - свободный вход
+
+paid_keywords:
+  - билет
+  - ticket
+  - руб
+  - byn
+  - цена
+  - стоимость
+  - платн
+  - купить билет
+  - registration fee
+
+# Фразы, при которых «бесплатно» не считается бесплатным входом для всех
+free_false_positive_phrases:
+  - бесплатно для сми
+  - бесплатно для прессы
+  - бесплатно для журналист
+  - free for media
+  - free for press
+
+attendance_patterns:
+  - '(?:более|свыше|около|до)?\s*(\d[\d\s]{2,6})\s*(?:посетител|участник|гост|человек|visitor|attendee)'
+  - '(\d[\d\s]{2,6})\s*\+\s*(?:посетител|участник)'
+
+partner_keywords:
+  - партнёр
+  - партнер
+  - спонсор
+  - sponsor
+  - инфопартнёр
+  - инфопартнер
+  - медиапартнёр
+  - медиапартнер
+  - стенд
+  - exhibitor
+  - генеральный партнёр
+  - информационный партнёр
+
+enrichment_priority_keywords:
+  high:
+    - конференц
+    - саммит
+    - форум
+    - минск
+    - minsk
+    - инфопартнёр
+    - инфопартнер
+  medium:
+    - выставк
+    - фестивал
+    - tech
+    - digital
+    - e-commerce
+    - маркетплейс
+
+pre_fetch_blocked_domains:
+  - facebook.com
+  - instagram.com
+  - twitter.com
+  - x.com
+  - youtube.com
+  - tiktok.com
+  - t.me
+  - vk.com
+  - ok.ru
+  - wikipedia.org
+
+pre_fetch_blocked_path_markers:
+  - /login
+  - /signin
+  - /auth
+  - /cart
+  - /basket

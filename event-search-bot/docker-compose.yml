@@ -1,0 +1,19 @@
+services:
+  bot:
+    build: .
+    env_file:
+      - .env
+    environment:
+      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://host.docker.internal:8080}
+    volumes:
+      - bot-data:/app/data
+      - partnership-leads-data:/app/partnership-data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  bot-data:
+  partnership-leads-data:
+    external: true
+    name: partnership-leads-data

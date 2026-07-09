@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "partnership-bot"
+version = "0.1.0"
+description = "Telegram bot for Onliner infopartnership applications"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiogram>=3.15.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+]
+
+[project.scripts]
+partnership-bot = "partnership_bot.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["partnership_bot*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
