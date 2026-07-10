@@ -50,13 +50,16 @@ async def replace_screen(
     user_message: Message | None = None,
     disable_web_page_preview: bool = True,
 ) -> Message:
-    """One bot message per user; delete previous screen and the user's tap."""
-    if user_message is not None:
-        await _delete_message(bot, user_message.chat.id, user_message.message_id)
-
+    """One bot message per user with minimal visual flicker."""
     old = _screens.get(user_id)
-    if old is not None:
-        await _delete_message(bot, old.chat_id, old.message_id)
+    same_as_old = (
+        old is not None
+        and user_message is not None
+        and old.chat_id == user_message.chat.id
+        and old.message_id == user_message.message_id
+    )
+    if user_message is not None and not same_as_old:
+        await _delete_message(bot, user_message.chat.id, user_message.message_id)
 
     sent = await bot.send_message(
         chat_id=chat_id,
@@ -68,6 +71,8 @@ async def replace_screen(
         await _sync_reply_keyboard(bot, chat_id, reply_markup)
     elif inline_markup is None and isinstance(reply_markup, ReplyKeyboardRemove):
         await _sync_reply_keyboard(bot, chat_id, reply_markup)
+    if old is not None:
+        await _delete_message(bot, old.chat_id, old.message_id)
 
     _screens[user_id] = UserScreen(chat_id, sent.message_id)
     return sent

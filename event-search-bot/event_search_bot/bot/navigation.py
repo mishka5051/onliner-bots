@@ -26,6 +26,43 @@ _extra_messages: dict[int, list[UserScreen]] = {}
 _last_edit_at: dict[int, float] = {}
 _last_edit_text: dict[int, str] = {}
 
+_SCREEN_META_PREFIX = "screen:"
+
+
+def _meta_key(user_id: int) -> str:
+    return f"{_SCREEN_META_PREFIX}{user_id}"
+
+
+def _load_persisted_screen(user_id: int) -> UserScreen | None:
+    try:
+        from event_search_bot.storage.user_storage import user_storage
+
+        raw = user_storage.get_meta(_meta_key(user_id))
+        if not raw:
+            return None
+        chat_raw, msg_raw = raw.split(":", 1)
+        return UserScreen(chat_id=int(chat_raw), message_id=int(msg_raw))
+    except Exception:
+        return None
+
+
+def _save_persisted_screen(user_id: int, screen: UserScreen) -> None:
+    try:
+        from event_search_bot.storage.user_storage import user_storage
+
+        user_storage.set_meta(_meta_key(user_id), f"{screen.chat_id}:{screen.message_id}")
+    except Exception:
+        logger.debug("Failed to persist user screen", exc_info=True)
+
+
+def _clear_persisted_screen(user_id: int) -> None:
+    try:
+        from event_search_bot.storage.user_storage import user_storage
+
+        user_storage.set_meta(_meta_key(user_id), "")
+    except Exception:
+        logger.debug("Failed to clear persisted user screen", exc_info=True)
+
 
 async def _delete_message(bot: Bot, chat_id: int, message_id: int) -> None:
     try:
@@ -50,15 +87,19 @@ async def replace_screen(
     user_message: Message | None = None,
     disable_web_page_preview: bool = True,
 ) -> Message:
-    """One navigation message per user: remove previous screen and the user's tap."""
+    """One navigation message per user with minimal visual flicker."""
     await clear_extra_messages(bot, user_id)
 
-    if user_message is not None:
-        await _delete_message(bot, user_message.chat.id, user_message.message_id)
+    old = _screens.get(user_id) or _load_persisted_screen(user_id)
+    same_as_old = (
+        old is not None
+        and user_message is not None
+        and old.chat_id == user_message.chat.id
+        and old.message_id == user_message.message_id
+    )
 
-    old = _screens.get(user_id)
-    if old is not None:
-        await _delete_message(bot, old.chat_id, old.message_id)
+    if user_message is not None and not same_as_old:
+        await _delete_message(bot, user_message.chat.id, user_message.message_id)
 
     sent = await bot.send_message(
         chat_id=chat_id,
@@ -69,7 +110,11 @@ async def replace_screen(
     if inline_markup is not None and reply_markup is not None:
         keyboard_msg = await bot.send_message(chat_id=chat_id, text=".", reply_markup=reply_markup)
         await _delete_message(bot, chat_id, keyboard_msg.message_id)
-    _screens[user_id] = UserScreen(chat_id, sent.message_id)
+    if old is not None:
+        await _delete_message(bot, old.chat_id, old.message_id)
+    new_screen = UserScreen(chat_id, sent.message_id)
+    _screens[user_id] = new_screen
+    _save_persisted_screen(user_id, new_screen)
     return sent
 
 
@@ -82,9 +127,10 @@ async def edit_screen(
     disable_web_page_preview: bool = True,
     clear_inline: bool = False,
 ) -> bool:
-    screen = _screens.get(user_id)
+    screen = _screens.get(user_id) or _load_persisted_screen(user_id)
     if screen is None:
         return False
+    _screens[user_id] = screen
     markup = EMPTY_INLINE_MARKUP if clear_inline else inline_markup
     try:
         await bot.edit_message_text(
@@ -150,6 +196,7 @@ async def show_user_screen(
     reply_markup: ReplyKeyboardMarkup | None = None,
     callback_message: Message | None = None,
 ) -> None:
+    await clear_extra_messages(bot, user_id)
     screen = _screens.get(user_id)
     if await edit_screen(bot, user_id=user_id, text=text, inline_markup=inline_markup):
         if callback_message is not None:
@@ -175,6 +222,7 @@ async def show_user_screen(
 
 async def clear_screen(bot: Bot, user_id: int) -> None:
     await clear_extra_messages(bot, user_id)
-    screen = _screens.pop(user_id, None)
+    screen = _screens.pop(user_id, None) or _load_persisted_screen(user_id)
     if screen is not None:
         await _delete_message(bot, screen.chat_id, screen.message_id)
+    _clear_persisted_screen(user_id)

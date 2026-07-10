@@ -1,6 +1,8 @@
 services:
   searxng:
     image: searxng/searxng:latest
+    volumes:
+      - ./config/searxng:/etc/searxng:rw
     environment:
       SEARXNG_BASE_URL: http://searxng:8080/
     healthcheck:
@@ -16,7 +18,8 @@ services:
     env_file:
       - .env
     environment:
-      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://searxng:8080}
+      # В docker всегда встроенный searxng; .env не должен переопределять URL.
+      SEARXNG_BASE_URL: http://searxng:8080
     volumes:
       - bot-data:/app/data
       - partnership-leads-data:/app/partnership-data

@@ -63,6 +63,12 @@ TIER_A: tuple[TrustedCatalog, ...] = (
         "expomap.ru",
         "A",
     ),
+    TrustedCatalog(
+        "Expomap выставки Минск",
+        "https://expomap.ru/exhibition/city/minsk/",
+        "expomap.ru",
+        "A",
+    ),
 )
 
 TIER_B: tuple[TrustedCatalog, ...] = (
@@ -82,6 +88,12 @@ TIER_B: tuple[TrustedCatalog, ...] = (
     TrustedCatalog(
         "Expomap Беларусь",
         "https://expomap.ru/conference/country/belarus/",
+        "expomap.ru",
+        "B",
+    ),
+    TrustedCatalog(
+        "Expomap выставки Беларусь",
+        "https://expomap.ru/exhibition/country/belarus/",
         "expomap.ru",
         "B",
     ),
