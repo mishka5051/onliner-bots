@@ -30,6 +30,15 @@ class ThemeMatcherService:
         for theme, keywords in self._rules.onliner_theme_keywords.items():
             for keyword in keywords:
                 kw = keyword.lower()
+                if kw == "it":
+                    if re.search(r"\b(it|ит)\b", lowered[:4000]) and re.search(
+                        r"(конференц|conference|tech|digital|разработ|devops|software|программ)",
+                        lowered[:4000],
+                        re.IGNORECASE,
+                    ):
+                        hits.append(theme)
+                        break
+                    continue
                 if len(kw) < 4:
                     if re.search(rf"\b{re.escape(kw)}\b", lowered):
                         hits.append(theme)

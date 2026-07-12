@@ -17,7 +17,7 @@ thresholds:
   shortlist_min_score: 50
   shortlist_max_age_days: 30
   auto_reject_below: 20
-  supplementary_borderline_min: 25
+  supplementary_borderline_min: 40
   supplementary_borderline_max: 65
 
 # Человекочитаемые подписи для score_breakdown в UI
@@ -216,6 +216,17 @@ foreign_city_keywords:
   - tallinn
   - helsinki
   - хельсинки
+  - istanbul
+  - стамбул
+  - bursa
+  - бурса
+  - shanghai
+  - suzhou
+  - сучжоу
+  - antalya
+  - анталья
+  - beijing
+  - пекин
 
 free_keywords:
   - бесплатн

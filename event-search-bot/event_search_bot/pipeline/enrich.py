@@ -4,6 +4,12 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+from event_search_bot.pipeline.candidate_gate import (
+    MIN_QUERY_RELEVANCE,
+    is_actionable_event_candidate,
+    is_catalog_provenance_snippet,
+    query_relevance_score,
+)
 from event_search_bot.pipeline.catalog import CatalogPageDetector
 from event_search_bot.pipeline.catalog_links import CatalogLinkExtractor
 from event_search_bot.pipeline.lead_time import LeadTimeValidator
@@ -22,20 +28,40 @@ CATALOG_NOTE = "Страница-каталог: не отдельное мер�
 
 @dataclass
 class EnrichmentContext:
+    user_query: str = ""
     events: list[EventRecord] = field(default_factory=list)
     seen_keys: set[str] = field(default_factory=set)
     catalog_budget: int = 150
     max_events_to_process: int = 400
+    max_catalog_generation: int = 1
     processed_count: int = 0
     catalog_expanded: int = 0
     cancelled: bool = False
 
-    def add_candidate(self, *, title: str, url: str, description: str | None = None) -> EventRecord | None:
+    def add_candidate(
+        self,
+        *,
+        title: str,
+        url: str,
+        description: str | None = None,
+        catalog_generation: int = 0,
+    ) -> EventRecord | None:
+        if self.user_query and not is_actionable_event_candidate(
+            user_query=self.user_query,
+            title=title,
+            url=url,
+        ):
+            return None
         key = duplicate_key(url)
         if key in self.seen_keys:
             return None
         self.seen_keys.add(key)
-        record = EventRecord.from_search_hit(title=title, url=url, description=description)
+        record = EventRecord.from_search_hit(
+            title=title,
+            url=url,
+            description=description,
+            catalog_generation=catalog_generation,
+        )
         self.events.append(record)
         return record
 
@@ -47,7 +73,7 @@ class EnrichmentEngine:
         rules: ScoringRules | None = None,
         fetch_timeout: float = 25.0,
         catalog_max_links: int = 18,
-        soft_reject_minsk: bool = True,
+        soft_reject_minsk: bool = False,
     ) -> None:
         self._rules = rules or get_scoring_rules()
         self._fetcher = HttpPageFetcher(timeout=fetch_timeout)
@@ -115,12 +141,28 @@ class EnrichmentEngine:
             self._reject(event, "Мероприятие не относится к Минску/Беларуси")
             return "rejected"
 
+        relevance = query_relevance_score(
+            ctx.user_query,
+            title=event.title,
+            url=event.url,
+            page_text=page.text,
+        )
+        if ctx.user_query and relevance < MIN_QUERY_RELEVANCE:
+            self._reject(event, f"Слабое совпадение с запросом ({relevance}%)")
+            return "rejected"
+
         self._apply_parsed(event, page, parsed)
+        event.score_breakdown = {
+            **(event.score_breakdown or {}),
+            "query_relevance": relevance,
+        }
         self._score(event)
         return "enriched"
 
     def _expand_catalog(self, event: EventRecord, html: str, ctx: EnrichmentContext) -> int:
         if ctx.catalog_budget <= 0:
+            return 0
+        if event.catalog_generation >= ctx.max_catalog_generation:
             return 0
 
         links = self._catalog_links.extract(html, event.url)
@@ -129,13 +171,15 @@ class EnrichmentEngine:
 
         links = links[: ctx.catalog_budget]
         created = 0
+        child_description = None if is_catalog_provenance_snippet(event.description) else event.description
         for link in links:
             if ctx.cancelled:
                 break
             new_event = ctx.add_candidate(
                 title=link.title,
                 url=link.url,
-                description=event.description,
+                description=child_description,
+                catalog_generation=event.catalog_generation + 1,
             )
             if new_event is not None:
                 created += 1

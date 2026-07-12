@@ -1,7 +1,7 @@
 # Точка отката — до рефакторинга точности поиска
 
 **Дата:** 2026-07-12  
-**Git:** коммит с тегом/сообщением `restore-point: before search precision gate`
+**Git:** откат к коммиту `f5004fe` (сразу перед рефакторингом)
 
 ## Состояние до изменений
 
@@ -18,7 +18,7 @@
 ```powershell
 cd D:\Onliner_2
 git log --oneline -5
-git checkout <commit-before-precision-gate> -- event-search-bot/
+git checkout f5004fe -- event-search-bot/
 cd event-search-bot
 docker compose up -d --build
 ```

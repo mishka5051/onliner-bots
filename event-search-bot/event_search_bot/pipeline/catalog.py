@@ -20,6 +20,11 @@ CATALOG_PATH_MARKERS = (
     "/vystavki/",
     "/expo/city",
     "/conference/city",
+    "/conference/theme/",
+    "/exhibition/theme",
+    "/expo/theme",
+    "/blogs/",
+    "/ploshadki",
 )
 
 CATALOG_PATH_REGEX = (
@@ -57,7 +62,9 @@ JSON_LD_EVENT = re.compile(
 )
 
 OTHER_CITY_IN_TITLE = re.compile(
-    r"\b(москва|moscow|санкт-петербург|spb|петербург|казань|новосибирск)\b",
+    r"\b(москва|moscow|санкт-петербург|spb|петербург|казань|новосибирск|"
+    r"istanbul|стамбул|bursa|бурса|shanghai|suzhou|сучжоу|анталья|antalya|"
+    r"пекин|beijing|гуанчжоу|guangzhou)\b",
     re.IGNORECASE,
 )
 

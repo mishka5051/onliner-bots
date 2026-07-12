@@ -50,6 +50,7 @@ class EventRecord:
     score_breakdown: dict[str, Any] = field(default_factory=dict)
     score_explanations: dict[str, str] = field(default_factory=dict)
     enriched_at: datetime | None = None
+    catalog_generation: int = 0
 
     @classmethod
     def from_search_hit(
@@ -58,12 +59,14 @@ class EventRecord:
         title: str,
         url: str,
         description: str | None,
+        catalog_generation: int = 0,
     ) -> EventRecord:
         return cls(
             title=title.strip(),
             url=url,
             source_domain=source_domain(url),
             description=description,
+            catalog_generation=catalog_generation,
         )
 
 

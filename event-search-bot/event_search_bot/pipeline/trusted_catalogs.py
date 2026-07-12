@@ -158,30 +158,14 @@ def event_matches_query(
     url: str,
     tier: str,
 ) -> bool:
-    if is_skipped_catalog_child_url(url):
-        return False
-    normalized_title = (title or "").strip().lower()
-    if any(pattern.search(normalized_title) for pattern in GENERIC_TITLE_PATTERNS):
-        return False
+    from event_search_bot.pipeline.candidate_gate import is_actionable_event_candidate
 
-    blob = _text_blob(title, url)
-    tokens = _query_tokens(user_query)
-    if not tokens:
-        return True
-
-    matched = sum(1 for token in tokens if token in blob)
-    if matched == 0:
-        return False
-
-    if tier == "B":
-        has_geo = any(marker in blob for marker in MINSK_MARKERS)
-        query_has_geo = any(marker.strip() in user_query.lower() for marker in MINSK_MARKERS)
-        if not has_geo and not query_has_geo:
-            return False
-        if matched < 2 and not has_geo:
-            return False
-
-    return True
+    return is_actionable_event_candidate(
+        user_query=user_query,
+        title=title,
+        url=url,
+        tier=tier,
+    )
 
 
 def all_trusted_catalogs() -> list[TrustedCatalog]:

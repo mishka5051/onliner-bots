@@ -89,7 +89,14 @@ class DeepSearchRunner:
         await self._engine.aclose()
 
     def _build_query(self, user_query: str) -> str:
+        import re
+
         query = user_query.strip()
+        lowered = query.lower()
+        if not any(marker in lowered for marker in ("минск", "minsk", "беларус", "belarus")):
+            query = f"{query} Минск Беларусь"
+        if not re.search(r"20\d{2}", query):
+            query = f"{query} 2026"
         if self._query_suffix:
             query = f"{query} {self._query_suffix}".strip()
         return query
@@ -151,6 +158,7 @@ class DeepSearchRunner:
         progress.phase = "enriching"
 
         ctx = EnrichmentContext(
+            user_query=user_query,
             catalog_budget=self._catalog_budget,
             max_events_to_process=self._max_events,
         )

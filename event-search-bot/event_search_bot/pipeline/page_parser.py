@@ -7,6 +7,7 @@ from event_search_bot.pipeline.event_type import EventTypeClassifier
 from event_search_bot.pipeline.html_meta import extract_event_date_from_html, extract_header_text
 from event_search_bot.pipeline.minsk_detector import MinskDetector
 from event_search_bot.pipeline.recurrence import RecurrenceDetector
+from event_search_bot.pipeline.candidate_gate import is_catalog_provenance_snippet
 from event_search_bot.pipeline.scoring_config import ScoringRules, get_scoring_rules
 from event_search_bot.pipeline.structured import StructuredEventData
 from event_search_bot.pipeline.theme_matcher import ThemeMatcherService
@@ -66,8 +67,12 @@ class EventPageParser:
     ) -> ParsedEventPage:
         sources: list[str] = []
         header_text = extract_header_text(html) if html else ""
-        combined = "\n".join(filter(None, [title, snippet, header_text, page_text]))
+        context_snippet = None if is_catalog_provenance_snippet(snippet) else snippet
+        combined = "\n".join(filter(None, [title, context_snippet, header_text, page_text]))
+        theme_text = "\n".join(filter(None, [title, (page_text or "")[:5000]]))
+        partner_text = "\n".join(filter(None, [title, (page_text or "")[:5000]]))
         lowered = combined.lower()
+        partner_lowered = partner_text.lower()
 
         city = self._extract_city(combined)
         event_date = self._extract_date(combined)
@@ -94,8 +99,8 @@ class EventPageParser:
             ticket_info = "json-ld"
             sources.append("json-ld:free")
 
-        partner_possible, partner_formats = self._extract_partner_info(lowered)
-        _, theme_tags = self._theme_matcher.compute_fit_score(combined)
+        partner_possible, partner_formats = self._extract_partner_info(partner_lowered)
+        _, theme_tags = self._theme_matcher.compute_fit_score(theme_text)
         if theme_tags:
             sources.append("theme-matcher")
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from urllib.parse import urlparse
 
+from event_search_bot.pipeline.candidate_gate import extract_query_tokens, is_actionable_event_candidate
 from event_search_bot.search.models import SearchResult
 
 EVENT_KEYWORDS = (
@@ -110,28 +111,6 @@ NON_EVENT_PATH_MARKERS = (
     "/services",
 )
 
-QUERY_STOPWORDS = {
-    "и",
-    "в",
-    "на",
-    "по",
-    "для",
-    "the",
-    "and",
-    "or",
-    "минск",
-    "minsk",
-    "беларусь",
-    "belarus",
-    "конференция",
-    "конференции",
-    "мероприятие",
-    "мероприятия",
-    "форум",
-}
-
-MIN_QUERY_TOKEN_LEN = 3
-
 
 def _text_blob(result: SearchResult) -> str:
     parts = [result.title, result.snippet or "", result.link, result.source_domain]
@@ -140,17 +119,6 @@ def _text_blob(result: SearchResult) -> str:
 
 def _keyword_hits(text: str, keywords: tuple[str, ...]) -> int:
     return sum(1 for keyword in keywords if keyword in text)
-
-
-def _query_tokens(query: str | None) -> list[str]:
-    if not query:
-        return []
-    tokens = re.findall(r"[a-zA-Zа-яА-ЯёЁ0-9]{3,}", query.lower())
-    return [
-        token
-        for token in tokens
-        if token not in QUERY_STOPWORDS and len(token) >= MIN_QUERY_TOKEN_LEN
-    ]
 
 
 def _query_match_hits(result: SearchResult, query_tokens: list[str]) -> int:
@@ -175,10 +143,6 @@ def score_result(result: SearchResult) -> int:
         score -= 45
     if any(keyword in text for keyword in NON_EVENT_KEYWORDS):
         score -= 40
-    if result.source_domain in CATALOG_DOMAINS:
-        score += 25
-        if _keyword_hits(text, EVENT_KEYWORDS) > 0:
-            score += 10
 
     if re.search(r"\b20(1[0-9]|2[0-3])\b", text):
         score -= 10
@@ -195,7 +159,20 @@ def is_blocked(result: SearchResult) -> bool:
 
 def rank_results(results: list[SearchResult], *, limit: int, query: str | None = None) -> list[SearchResult]:
     filtered = [item for item in results if not is_blocked(item)]
-    query_tokens = _query_tokens(query)
+    if query:
+        gated = [
+            item
+            for item in filtered
+            if is_actionable_event_candidate(
+                user_query=query,
+                title=item.title,
+                url=item.link,
+            )
+        ]
+        if gated:
+            filtered = gated
+
+    query_tokens = extract_query_tokens(query or "")
     if query_tokens:
         query_filtered: list[SearchResult] = []
         for item in filtered:
