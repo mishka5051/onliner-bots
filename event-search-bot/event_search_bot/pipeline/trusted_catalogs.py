@@ -21,6 +21,18 @@ QUERY_STOPWORDS = frozenset(
         "мероприятия",
         "мероприятие",
         "форум",
+        "выставка",
+        "выставки",
+        "expo",
+        "exhibition",
+        "саммит",
+        "summit",
+        "митап",
+        "meetup",
+        "фестиваль",
+        "festival",
+        "ярмарка",
+        "ярмарки",
         "минск",
         "minsk",
         "беларус",
@@ -65,7 +77,7 @@ TIER_A: tuple[TrustedCatalog, ...] = (
     ),
     TrustedCatalog(
         "Expomap выставки Минск",
-        "https://expomap.ru/exhibition/city/minsk/",
+        "https://expomap.ru/expo/city/minsk/",
         "expomap.ru",
         "A",
     ),
@@ -93,7 +105,7 @@ TIER_B: tuple[TrustedCatalog, ...] = (
     ),
     TrustedCatalog(
         "Expomap выставки Беларусь",
-        "https://expomap.ru/exhibition/country/belarus/",
+        "https://expomap.ru/expo/country/belarus/",
         "expomap.ru",
         "B",
     ),
@@ -165,8 +177,44 @@ def event_matches_query(
         title=title,
         url=url,
         tier=tier,
+        source="catalog",
     )
 
 
 def all_trusted_catalogs() -> list[TrustedCatalog]:
     return [*TIER_A, *TIER_B]
+
+
+IT_CATALOG_NAMES = frozenset(
+    {
+        "IT-event.by",
+        "BezKassira IT Минск",
+        "ICT2GO Минск",
+        "Expomap IT Минск",
+        "Workspace Digital BY",
+        "Conference.by",
+        "Expomap Беларусь",
+    }
+)
+
+EXPO_CATALOG_NAMES = frozenset(
+    {
+        "Expomap выставки Минск",
+        "Expomap выставки Беларусь",
+        "All-Events Минск",
+        "Conference.by",
+        "Expomap Беларусь",
+    }
+)
+
+
+def catalogs_for_query(user_query: str) -> list[TrustedCatalog]:
+    from event_search_bot.pipeline.candidate_gate import detect_query_themes, extract_query_tokens
+
+    tokens = extract_query_tokens(user_query)
+    if "it" in detect_query_themes(tokens):
+        return [catalog for catalog in all_trusted_catalogs() if catalog.name in IT_CATALOG_NAMES]
+    if any(token in {"expo", "exhibition", "ярмарк"} for token in tokens):
+        preferred = [catalog for catalog in all_trusted_catalogs() if catalog.name in EXPO_CATALOG_NAMES]
+        return preferred or all_trusted_catalogs()
+    return all_trusted_catalogs()

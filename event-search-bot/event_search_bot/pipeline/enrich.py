@@ -33,7 +33,7 @@ class EnrichmentContext:
     seen_keys: set[str] = field(default_factory=set)
     catalog_budget: int = 150
     max_events_to_process: int = 400
-    max_catalog_generation: int = 1
+    max_catalog_generation: int = 2
     processed_count: int = 0
     catalog_expanded: int = 0
     cancelled: bool = False

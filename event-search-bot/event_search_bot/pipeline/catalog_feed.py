@@ -9,7 +9,7 @@ from event_search_bot.pipeline.catalog_links import CatalogLinkExtractor
 from event_search_bot.pipeline.page_fetcher import FetchSkipped, HttpPageFetcher
 from event_search_bot.pipeline.trusted_catalogs import (
     TrustedCatalog,
-    all_trusted_catalogs,
+    catalogs_for_query,
     event_matches_query,
 )
 from event_search_bot.search.models import SearchResult
@@ -30,7 +30,7 @@ async def collect_trusted_catalog_hits(
     seen: set[str] = set()
 
     try:
-        for catalog in all_trusted_catalogs():
+        for catalog in catalogs_for_query(user_query):
             try:
                 page = await fetcher.fetch(catalog.url, title=catalog.name, snippet=None)
             except FetchSkipped:

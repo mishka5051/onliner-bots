@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from event_search_bot.pipeline.enrich import EnrichmentContext, EnrichmentEngine
 from event_search_bot.pipeline.models import EventRecord, PipelineProgress
+from event_search_bot.pipeline.candidate_gate import detect_query_themes, extract_query_tokens
 from event_search_bot.pipeline.non_event import looks_like_real_event
 from event_search_bot.pipeline.scoring_config import get_scoring_rules
 from event_search_bot.search.filter import rank_results
@@ -101,6 +102,70 @@ class DeepSearchRunner:
             query = f"{query} {self._query_suffix}".strip()
         return query
 
+    def _search_variants(self, user_query: str, built_query: str) -> list[str]:
+        variants = [built_query]
+        strict = extract_query_tokens(user_query)
+        themes = detect_query_themes(strict)
+        if "it" in themes:
+            variants.extend(
+                [
+                    "IT конференция Минск 2026",
+                    "форум разработчиков Минск Беларусь",
+                    "митап IT Минск",
+                    "digital конференция Беларусь",
+                ]
+            )
+        if "expo" in themes:
+            variants.extend(
+                [
+                    "выставка Минск 2026",
+                    "expo Belarus Minsk 2026",
+                    "выставки Беларусь 2026",
+                ]
+            )
+        if "business" in themes:
+            variants.extend(
+                [
+                    "бизнес форум Минск 2026",
+                    "business conference Belarus 2026",
+                    "маркетинг форум Минск",
+                ]
+            )
+        if strict:
+            variants.append(f"{built_query} мероприятие")
+        else:
+            variants.append("мероприятия Минск Беларусь 2026")
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for item in variants:
+            key = item.strip().lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append(item.strip())
+        return deduped
+
+    async def _collect_search_hits(self, user_query: str, built_query: str) -> list[SearchResult]:
+        variants = self._search_variants(user_query, built_query)
+        per_query = max(25, self._results_limit // max(1, len(variants)))
+        merged: list[SearchResult] = []
+        seen_urls: set[str] = set()
+
+        for variant in variants:
+            try:
+                raw_hits = await self._searxng.search(variant, limit=per_query)
+            except Exception:
+                logger.exception("SearXNG search failed for query=%r", variant)
+                continue
+            for item in raw_hits:
+                key = item.link.rstrip("/")
+                if key in seen_urls:
+                    continue
+                seen_urls.add(key)
+                merged.append(item)
+
+        return rank_results(merged, limit=self._results_limit, query=built_query)
+
     async def run(
         self,
         user_query: str,
@@ -129,11 +194,7 @@ class DeepSearchRunner:
 
         await emit(force=True)
 
-        try:
-            raw_hits = await self._searxng.search(built_query, limit=self._results_limit)
-        except Exception:
-            logger.exception("SearXNG search failed for query=%r", built_query)
-            raw_hits = []
+        raw_hits = await self._collect_search_hits(user_query, built_query)
 
         from event_search_bot.pipeline.catalog_feed import collect_trusted_catalog_hits
 
@@ -150,7 +211,7 @@ class DeepSearchRunner:
                 seen_urls.add(key)
                 merged.append(item)
 
-        add_hits(rank_results(raw_hits, limit=self._results_limit, query=built_query))
+        add_hits(raw_hits)
         add_hits(catalog_hits)
 
         hits = rank_results(merged, limit=self._results_limit, query=built_query)
